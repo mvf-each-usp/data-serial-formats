@@ -1,0 +1,17 @@
+# ERRO 1: vírgula dentro do campo sem aspas → leitura errada de colunas
+nome,idade,cidade,nota
+Ana Lima,28,São Paulo,9.5
+Bruno Carvalho,34,Curitiba,8.0
+Carla Dias,22,Belo Horizonte,7.75     # ← cidade com vírgula quebraria sem aspas
+Daniel Souza,41,Porto Alegre,6.0
+
+# ERRO 2: número diferente de campos na linha (falta a nota)
+Elisa Fernandes,19,Recife
+
+# ERRO 3: linha em branco inesperada no meio
+
+# ERRO 4: encoding — acentuação salva em latin-1 em arquivo declarado como UTF-8
+# (simulado aqui com comentário; na prática gera caracteres estranhos: S�o Paulo)
+
+# ERRO 5: header com espaço extra → coluna " nota" ≠ "nota"
+nome, idade, cidade, nota

@@ -1,0 +1,21 @@
+# ERRO 1: indentação inconsistente (mistura espaços e tabs)
+alunos:
+  - nome: Ana Lima
+    idade: 28
+	cidade: São Paulo   # ← TAB aqui → erro de parse
+
+# ERRO 2: dois-pontos sem espaço depois da chave
+  - nome:Bruno Carvalho
+    idade: 34
+
+# ERRO 3: string com caractere especial sem aspas → : quebra o parser
+  - nome: Carla: Dias
+    idade: 22
+
+# ERRO 4: booleano escrito incorretamente (YAML: true/false minúsculos)
+  - nome: Daniel Souza
+    aprovado: True     # ← YAML interpreta como string, não booleano
+
+# ERRO 5: âncora mal referenciada
+  - nome: Elisa Fernandes
+    dados: *perfil     # ← âncora &perfil não foi definida

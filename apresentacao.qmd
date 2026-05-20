@@ -1,0 +1,1309 @@
+---
+title: "Formatos de Serialização de Dados Baseados em Texto"
+subtitle: "Série `R_Brasil |> bate::papo()`"
+author: "R Brasil — Discord"
+date: today
+lang: pt-BR
+format:
+  revealjs:
+    theme: night
+    highlight-style: github-dark
+    code-line-numbers: true
+    slide-number: true
+    chalkboard: false
+    scrollable: true
+    transition: slide
+    footer: "R_Brasil |> bate::papo() — Serialização de Dados"
+    logo: ""
+execute:
+  echo: true
+  eval: false
+---
+
+# Bem-vindos! {background-color="#1a1a2e"}
+
+**Formatos de Serialização de Dados Baseados em Texto**
+
+Vamos explorar como representar, trocar e armazenar dados usando arquivos de texto simples.
+
+---
+
+## O que são formatos text-based?
+
+:::: {.columns}
+::: {.column width="60%"}
+Arquivos legíveis por humanos **e** máquinas que representam dados estruturados usando apenas caracteres de texto.
+
+**Vantagens:**
+
+- Abertos por qualquer editor
+- Versionáveis com Git
+- Portáveis entre sistemas e linguagens
+- Fáceis de inspecionar e depurar
+:::
+::: {.column width="40%"}
+**Exemplos do dia a dia:**
+
+- `settings.json` (VS Code)
+- `_config.yml` (Jekyll/Hugo)
+- `pyproject.toml` (Python)
+- `pom.xml` (Maven/Java)
+- `dados.csv` (planilhas)
+- Arquivos legados bancários (FWF)
+:::
+::::
+
+---
+
+## Um gostinho de cada formato {.smaller}
+
+::::: {.panel-tabset}
+
+### FWF
+```
+# Largura fixa: nome(20) idade(3) cidade(15) nota(5)
+Ana Lima            28 São Paulo      9.5
+Bruno Carvalho      34 Curitiba       8.0
+```
+
+### CSV
+```csv
+nome,idade,cidade,nota
+Ana Lima,28,São Paulo,9.5
+Bruno Carvalho,34,Curitiba,8.0
+```
+
+### TSV
+```
+nome	idade	cidade	nota
+Ana Lima	28	São Paulo	9.5
+```
+
+### YAML
+```yaml
+alunos:
+  - nome: Ana Lima
+    idade: 28
+    nota: 9.5
+```
+
+### JSON
+```json
+{"alunos": [{"nome": "Ana Lima", "idade": 28, "nota": 9.5}]}
+```
+
+### XML
+```xml
+<cadastro>
+  <aluno><nome>Ana Lima</nome><idade>28</idade></aluno>
+</cadastro>
+```
+
+### TOML
+```toml
+[[alunos]]
+nome  = "Ana Lima"
+idade = 28
+nota  = 9.5
+```
+
+:::::
+
+---
+
+# Dados Estruturados vs. Não-Estruturados {background-color="#16213e"}
+
+---
+
+## Estruturado × Não-Estruturado
+
+:::: {.columns}
+::: {.column width="50%"}
+### ✅ Estruturado
+Esquema **predefinido**, campos com tipos e posições conhecidos.
+
+```csv
+nome,idade,nota
+Ana,28,9.5
+Bruno,34,8.0
+```
+
+Máquina sabe exatamente **onde** e **o quê** cada valor representa.
+:::
+::: {.column width="50%"}
+### 📄 Não-Estruturado
+Texto livre, sem esquema fixo.
+
+```
+A Ana tem 28 anos e tirou
+nota 9,5 na prova de hoje.
+Já o Bruno (34 anos) ficou
+com 8,0.
+```
+
+Extração requer NLP, regex ou leitura humana.
+:::
+::::
+
+---
+
+## Semi-Estruturado
+
+Entre os dois extremos existe o **semi-estruturado**: tem marcadores/tags, mas o esquema é flexível.
+
+```json
+[
+  {"nome": "Ana", "nota": 9.5},
+  {"nome": "Bruno", "redes": ["linkedin", "github"]}
+]
+```
+
+> JSON, YAML e XML são exemplos clássicos de formatos semi-estruturados — cada objeto pode ter campos diferentes.
+
+---
+
+# Serialização e Desserialização {background-color="#0f3460"}
+
+---
+
+## O que é Serialização?
+
+**Serializar** = converter uma estrutura de dados em memória em uma sequência de bytes (ou caracteres) que pode ser **armazenada** ou **transmitida**.
+
+```{mermaid}
+flowchart LR
+  A["🧠 Objeto em memória\n(lista, data.frame, dict…)"]
+  B["📄 Texto / bytes\n(CSV, JSON, XML…)"]
+  A -- "serializar\n(write/dump/encode)" --> B
+  B -- "desserializar\n(read/parse/decode)" --> A
+```
+
+---
+
+## Serialização na Prática (R)
+
+```r
+# Serializar: data.frame → JSON
+library(jsonlite)
+df <- data.frame(nome = c("Ana", "Bruno"), nota = c(9.5, 8.0))
+json_txt <- toJSON(df, pretty = TRUE)
+cat(json_txt)
+
+# Desserializar: JSON → data.frame
+df2 <- fromJSON(json_txt)
+identical(df, df2)  # TRUE
+```
+
+---
+
+## Por que importa?
+
+| Cenário | Serialização usada |
+|---|---|
+| API REST entre sistemas | JSON |
+| Config de ferramenta | TOML / YAML |
+| Exportar tabela de banco | CSV |
+| Documento corporativo | XML |
+| Arquivo legado mainframe | FWF |
+| Feed de dados abertos | JSON / XML |
+
+> O formato escolhido impacta **tamanho**, **legibilidade**, **velocidade** de parse e **ecossistema** de ferramentas.
+
+---
+
+# FWF — Fixed-Width Format {background-color="#533483"}
+
+---
+
+## FWF: o que é?
+
+**Fixed-Width Format** (Formato de Largura Fixa): cada campo ocupa um número **exato** de caracteres, sem separador explícito.
+
+```
+# col:  1-20          21-23  24-38          39-43
+Ana Lima            28 São Paulo      9.5  
+Bruno Carvalho      34 Curitiba       8.0  
+Carla Dias          22 Belo Horizonte 7.75 
+```
+
+- Origem: sistemas **mainframe** e **COBOL** (décadas de 1960-70)
+- Ainda presente em: SPED Fiscal, CNAB bancário, dados do IBGE, Receita Federal
+
+---
+
+## FWF: onde aparece
+
+- **CNAB 240/400** — remessas bancárias
+- **SPED** — escrituração fiscal digital
+- **Microdados IBGE** (PNAD, Censo)
+- Registros de seguradoras, previdência, Receita Federal
+
+```
+# Extrato CNAB (simplificado)
+01EMPRESA XYZ                 12345678000195
+3000012345678900000000001500002025010120250101
+```
+
+---
+
+## FWF no R
+
+```r
+library(readr)
+
+# Definir posições e nomes das colunas
+colunas <- fwf_cols(
+  nome   = c(1, 20),
+  idade  = c(21, 23),
+  cidade = c(24, 38),
+  nota   = c(39, 43)
+)
+
+df <- read_fwf("dados/exemplo.fwf", col_positions = colunas,
+               skip = 2)   # pular linhas de comentário
+```
+
+```r
+# Alternativa: iotools
+library(iotools)
+```
+
+---
+
+## FWF: tropeços comuns ⚠️
+
+:::: {.columns}
+::: {.column width="55%"}
+1. **Encoding errado** — latin-1 vs UTF-8 → acentos corrompidos
+2. **Offset por um caractere** — se a coluna começa em 1 ou 0?
+3. **Linhas com comprimento diferente** — truncamento ou padding faltando
+4. **Documentação desatualizada** — layout real ≠ manual
+5. **Campos numéricos com zeros à esquerda** (`007`) — são string, não inteiros
+:::
+::: {.column width="45%"}
+```
+# Layout diz: nome em 1-20
+# Arquivo real tem 19 chars
+Ana Lima           28← col 20!
+# Todos os campos
+# seguintes ficam tortos
+```
+:::
+::::
+
+---
+
+# DSV — Delimiter-Separated Values {background-color="#2d6a4f"}
+
+---
+
+## CSV: o queridinho dos dados
+
+**Comma-Separated Values** — valores separados por vírgula.
+
+```csv
+nome,idade,cidade,nota
+Ana Lima,28,São Paulo,9.5
+Bruno Carvalho,34,Curitiba,8.0
+Carla Dias,22,Belo Horizonte,7.75
+```
+
+- Padrão **RFC 4180**
+- Suportado por todo ecossistema: Excel, Python, R, bancos de dados...
+- Sem tipo de dados: tudo é string — a semântica fica na leitura
+
+---
+
+## TSV e outras variantes
+
+**TSV** — Tab-Separated Values: usa `\t` como separador.
+
+```
+nome	idade	cidade	nota
+Ana Lima	28	São Paulo	9.5
+```
+
+**Outras variantes:**
+
+| Separador | Uso comum |
+|---|---|
+| `,` | CSV padrão internacional |
+| `;` | CSV europeu (vírgula como decimal) |
+| `\t` | TSV — dados tabulares sem vírgulas |
+| `|` | Pipe-delimited — legacy databases |
+| `:` | `/etc/passwd` no Linux |
+
+---
+
+## CSV no R
+
+```r
+# tidyverse (recomendado)
+library(readr)
+df <- read_csv("dados/exemplo.csv")
+write_csv(df, "saida.csv")
+
+# Base R
+df <- read.csv("dados/exemplo.csv", encoding = "UTF-8")
+write.csv(df, "saida.csv", row.names = FALSE)
+
+# TSV
+df_tsv <- read_tsv("dados/exemplo.tsv")
+
+# CSV com separador ponto-e-vírgula (padrão europeu)
+df_br <- read_csv2("dados/brasil.csv")   # sep=";", dec=","
+```
+
+---
+
+## DSV: tropeços comuns ⚠️ {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+1. **Vírgula dentro do campo** sem aspas → número errado de colunas
+2. **Encoding** — UTF-8 vs latin-1; BOM invisível do Excel
+3. **Separador decimal vs. de campo** — `9,5` com sep `,` → `9` e `5`
+4. **Aspas mal balanceadas** → parser não fecha campo
+5. **Número de colunas inconsistente** entre linhas
+6. **Espaço extra no header** → `" nota"` ≠ `"nota"`
+7. **Datas ambíguas** — `01/02/03` é Jan/Fev/Mar de qual ano?
+:::
+::: {.column width="45%"}
+```csv
+# PROBLEMA: cidade com vírgula
+nome,cidade,nota
+Ana,"São Paulo, SP",9.5
+Bruno,Curitiba,8.0
+Carla,Belo Horizonte,7.75
+
+# SEM ASPAS → leitura errada:
+Ana,São Paulo, SP,9.5
+# → 4 colunas na linha de Ana
+#   3 no header = ERRO
+```
+:::
+::::
+
+---
+
+## Ferramentas Linux para CSV/TSV
+
+```bash
+# Visualizar alinhado
+column -t -s, dados/exemplo.csv
+
+# Filtrar com csvkit
+csvcut -c nome,nota dados/exemplo.csv
+csvgrep -c nota -r "^[89]" dados/exemplo.csv
+
+# awk: segunda coluna de um TSV
+awk -F'\t' '{print $2}' dados/exemplo.tsv
+
+# miller (mlr): ferramenta poderosa para DSV
+mlr --csv filter '$nota > 8' dados/exemplo.csv
+mlr --csv sort -f nome dados/exemplo.csv
+
+# xsv: rápido, em Rust
+xsv stats dados/exemplo.csv
+xsv select nome,nota dados/exemplo.csv
+```
+
+---
+
+# YAML {background-color="#1b4332"}
+
+---
+
+## YAML: "YAML Ain't Markup Language"
+
+Formato legível por humanos, focado em **configuração**.
+
+```yaml
+alunos:
+  - nome: Ana Lima
+    idade: 28
+    cidade: São Paulo
+    nota: 9.5
+    aprovado: true
+  - nome: Bruno Carvalho
+    idade: 34
+    cidade: Curitiba
+    nota: 8.0
+    aprovado: true
+```
+
+- Versões: 1.1 (legado) e **1.2** (atual)
+- Superset de JSON (todo JSON válido é YAML válido)
+- Suporte a comentários com `#`
+
+---
+
+## YAML: onde aparece
+
+| Ferramenta | Arquivo |
+|---|---|
+| GitHub Actions | `.github/workflows/*.yml` |
+| Docker Compose | `docker-compose.yml` |
+| Kubernetes | `deployment.yaml` |
+| Ansible | `playbook.yml` |
+| Jekyll / Hugo | `_config.yml` |
+| Quarto | YAML front matter |
+| R package | Não é comum — prefere TOML/DESCRIPTION |
+
+---
+
+## YAML: recursos avançados
+
+```yaml
+# Âncoras e aliases — reutilizar blocos
+defaults: &defaults
+  aprovado: true
+  turma: "2025-A"
+
+alunos:
+  - nome: Ana Lima
+    nota: 9.5
+    <<: *defaults     # herda campos de &defaults
+
+  - nome: Bruno Carvalho
+    nota: 8.0
+    <<: *defaults
+
+# Texto multilinha (literal block)
+descricao: |
+  Este curso aborda
+  serialização de dados
+  em múltiplos formatos.
+```
+
+---
+
+## YAML no R
+
+```r
+library(yaml)
+
+# Ler YAML
+dados <- yaml.load_file("dados/exemplo.yaml")
+str(dados)
+
+# Converter lista → YAML
+lista <- list(
+  curso  = "Serialização",
+  alunos = list(
+    list(nome = "Ana", nota = 9.5),
+    list(nome = "Bruno", nota = 8.0)
+  )
+)
+cat(as.yaml(lista))
+
+# Escrever para arquivo
+write_yaml(lista, "saida.yaml")
+```
+
+---
+
+## YAML: tropeços comuns ⚠️ {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+1. **Tabs no lugar de espaços** → erro de parse imediato
+2. **Indentação inconsistente** → estrutura hierárquica errada
+3. **Strings sem aspas com `:` ou `#`** → quebra o parser
+4. **`True`/`False` com maiúscula** → string em YAML 1.2, booleano em YAML 1.1
+5. **`NO`/`YES`/`ON`/`OFF`** → booleanos em YAML 1.1 (pegadinha!)
+6. **Chave `null` / valor `~`** — diferença sutil
+7. **Arquivos muito grandes** — YAML não é bom para dados tabulares massivos
+:::
+::: {.column width="45%"}
+```yaml
+# YAML 1.1 (PyYAML antigo):
+pais: NO     # → false (booleano!)
+linguagem: R # → string "R"
+
+# YAML 1.2 (atual):
+pais: NO     # → string "NO"
+
+# Tab causa erro:
+aluno:
+	nome: Ana  # ← TAB aqui = ERRO!
+
+# Dois-pontos em string:
+titulo: Hora: Extra  # ERRO
+titulo: "Hora: Extra" # OK
+```
+:::
+::::
+
+---
+
+## Ferramentas Linux para YAML
+
+```bash
+# yq: jq para YAML (indispensável!)
+yq '.alunos[].nome' dados/exemplo.yaml
+yq '.alunos | length' dados/exemplo.yaml
+
+# Filtrar e transformar
+yq '.alunos[] | select(.nota > 8)' dados/exemplo.yaml
+
+# Converter YAML → JSON
+yq -o=json dados/exemplo.yaml
+
+# Validar sintaxe com Python
+python3 -c "import yaml, sys; yaml.safe_load(open('dados/exemplo.yaml'))"
+
+# prettier (Node.js) — formatar YAML
+prettier --parser yaml dados/exemplo.yaml
+```
+
+---
+
+# JSON {background-color="#7b2d8b"}
+
+---
+
+## JSON: JavaScript Object Notation
+
+O formato de troca de dados da era web.
+
+```json
+{
+  "alunos": [
+    {
+      "nome": "Ana Lima",
+      "idade": 28,
+      "cidade": "São Paulo",
+      "nota": 9.5,
+      "aprovado": true
+    },
+    {
+      "nome": "Bruno Carvalho",
+      "idade": 34,
+      "cidade": "Curitiba",
+      "nota": 8.0,
+      "aprovado": true
+    }
+  ]
+}
+```
+
+- Especificação: **RFC 8259** / ECMA-404
+- Tipos nativos: `string`, `number`, `boolean`, `null`, `array`, `object`
+
+---
+
+## JSON: onde aparece
+
+| Contexto | Exemplo |
+|---|---|
+| APIs REST | Resposta de qualquer API web |
+| Configuração | `package.json`, `tsconfig.json` |
+| Bancos NoSQL | MongoDB, CouchDB, DynamoDB |
+| Logs estruturados | Logstash, Elasticsearch |
+| GeoJSON | Dados geográficos |
+| Jupyter Notebooks | `.ipynb` é JSON |
+| Comunicação entre serviços | Microsserviços |
+
+---
+
+## JSON no R
+
+```r
+library(jsonlite)
+
+# Ler JSON
+dados <- fromJSON("dados/exemplo.json")
+str(dados)
+
+# data.frame → JSON
+df <- data.frame(nome = c("Ana", "Bruno"), nota = c(9.5, 8.0))
+toJSON(df, pretty = TRUE)
+
+# Lista aninhada → JSON
+lista <- list(curso = "R", alunos = list(
+  list(nome = "Ana", nota = 9.5)
+))
+toJSON(lista, auto_unbox = TRUE, pretty = TRUE)
+
+# Streaming de JSON grande
+library(jsonlite)
+stream_in(file("grande.json"))   # linha-a-linha (NDJSON)
+```
+
+---
+
+## JSON vs YAML: diferenças sutis
+
+| Aspecto | JSON | YAML |
+|---|---|---|
+| Comentários | ❌ não suporta | ✅ `# comentário` |
+| Trailing comma | ❌ proibida | ✅ irrelevante |
+| Aspas de string | Apenas `"duplas"` | `"duplas"`, `'simples'` ou sem aspas |
+| Tipos extras | Apenas 6 tipos | datas, âncoras, tags |
+| Verbosidade | Maior | Menor |
+| Velocidade de parse | Mais rápido | Mais lento |
+| Uso principal | APIs / dados | Config / humanos |
+
+> YAML é um **superset** de JSON: todo JSON válido é YAML válido.
+
+---
+
+## JSON: tropeços comuns ⚠️ {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+1. **Trailing comma** após último elemento → parse error
+2. **Aspas simples** → inválidas em JSON
+3. **Comentários** → JSON não suporta `//` nem `#`
+4. **NaN / Infinity** → não existem em JSON
+5. **Inteiros grandes** → perda de precisão acima de 2⁵³
+6. **Datas** → não há tipo nativo; usa-se string ISO 8601
+7. **Quebra de linha em string** → deve ser `\n`, não literal
+8. **Chaves duplicadas** → comportamento indefinido
+:::
+::: {.column width="45%"}
+```json
+{
+  "alunos": [
+    {"nome": "Ana", "nota": 9.5},  ← vírgula OK
+    {"nome": "Bruno", "nota": 8.0} ← sem vírgula
+  ],   ← TRAILING COMMA = ERRO!
+  // comentário   ← INVÁLIDO
+  "id": 9007199254740993  ← perda de precisão
+}
+```
+:::
+::::
+
+---
+
+## Ferramentas Linux para JSON
+
+```bash
+# jq: a ferramenta JSON por excelência
+jq '.alunos[].nome' dados/exemplo.json
+jq '.alunos[] | select(.nota > 8)' dados/exemplo.json
+jq '[.alunos[] | {nome, nota}]' dados/exemplo.json
+
+# Converter JSON → CSV
+jq -r '.alunos[] | [.nome, .idade, .nota] | @csv' dados/exemplo.json
+
+# Formatar / validar
+cat dados/exemplo.json | jq .
+
+# python json.tool (embutido)
+python3 -m json.tool dados/exemplo.json
+
+# fx: explorador interativo
+fx dados/exemplo.json
+```
+
+---
+
+# XML {background-color="#8b2500"}
+
+---
+
+## XML: eXtensible Markup Language
+
+Formato baseado em **tags** hierárquicas. Verbose, mas poderoso.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<cadastro>
+  <aluno>
+    <nome>Ana Lima</nome>
+    <idade>28</idade>
+    <cidade>São Paulo</cidade>
+    <nota>9.5</nota>
+    <aprovado>true</aprovado>
+  </aluno>
+  <aluno>
+    <nome>Bruno Carvalho</nome>
+    <idade>34</idade>
+    <cidade>Curitiba</cidade>
+  </aluno>
+</cadastro>
+```
+
+---
+
+## XML: atributos vs. elementos filhos
+
+```xml
+<!-- Estilo atributos -->
+<aluno nome="Ana Lima" idade="28" nota="9.5"/>
+
+<!-- Estilo elementos -->
+<aluno>
+  <nome>Ana Lima</nome>
+  <idade>28</idade>
+  <nota>9.5</nota>
+</aluno>
+
+<!-- Misto — válido, mas evite inconsistências -->
+<aluno id="001" aprovado="true">
+  <nome>Ana Lima</nome>
+  <nota>9.5</nota>
+</aluno>
+```
+
+> Não há regra rígida: use **atributos** para metadados e **elementos** para conteúdo.
+
+---
+
+## XML: onde aparece
+
+| Contexto | Exemplo |
+|---|---|
+| Web services SOAP | Integração empresarial |
+| Documentos Office | `.docx`, `.xlsx` (ZIP com XML) |
+| SVG | Gráficos vetoriais na web |
+| RSS / Atom | Feeds de notícias |
+| Maven (Java) | `pom.xml` |
+| Android | `AndroidManifest.xml` |
+| NF-e / NFS-e | Notas fiscais eletrônicas BR |
+| HL7 (saúde) | Prontuários eletrônicos |
+
+---
+
+## XML no R
+
+```r
+library(xml2)
+
+# Ler XML
+doc <- read_xml("dados/exemplo.xml")
+
+# Navegar com XPath
+xml_find_all(doc, "//aluno/nome") |> xml_text()
+xml_find_all(doc, "//aluno[nota > 8]/nome") |> xml_text()
+
+# Atributos
+xml_attr(xml_find_all(doc, "//aluno"), "id")
+
+library(XML)   # alternativa mais antiga
+doc2 <- xmlParse("dados/exemplo.xml")
+xpathSApply(doc2, "//nome", xmlValue)
+```
+
+---
+
+## XML: tropeços comuns ⚠️ {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+1. **Tags mal fechadas ou com nomes diferentes** → documento inválido
+2. **`&`, `<`, `>` sem escape** → deve ser `&amp;`, `&lt;`, `&gt;`
+3. **Atributos sem aspas** → inválido
+4. **Múltiplos elementos raiz** → XML permite apenas um
+5. **Namespaces** — `xmlns:ns="..."` confunde parsers e XPath
+6. **CDATA para conteúdo binário** — armadilha de manutenção
+7. **Verbosidade extrema** → arquivos enormes para dados simples
+:::
+::: {.column width="45%"}
+```xml
+<!-- ERRO: & sem escape -->
+<nome>Carla & Dias</nome>
+
+<!-- CORRETO -->
+<nome>Carla &amp; Dias</nome>
+
+<!-- ERRO: dois elementos raiz -->
+<a/><b/>
+
+<!-- ERRO: < literal -->
+<bio>nota < 5 = reprovado</bio>
+<!-- CORRETO -->
+<bio>nota &lt; 5 = reprovado</bio>
+```
+:::
+::::
+
+---
+
+## Ferramentas Linux para XML
+
+```bash
+# xmllint: validar e formatar
+xmllint --noout dados/exemplo.xml          # validar
+xmllint --format dados/exemplo.xml         # formatar (pretty-print)
+
+# Consultas XPath
+xmllint --xpath "//aluno/nome/text()" dados/exemplo.xml
+
+# xq: jq para XML (converte para JSON internamente)
+xq '.cadastro.aluno[].nome' dados/exemplo.xml
+
+# saxon: XSLT e XQuery de nível profissional
+# sed/grep para XML pequeno (não recomendado, mas existe)
+grep -oP '(?<=<nome>)[^<]+' dados/exemplo.xml
+```
+
+---
+
+# TOML {background-color="#0d4f4f"}
+
+---
+
+## TOML: Tom's Obvious, Minimal Language
+
+Criado por **Tom Preston-Werner** (cofundador do GitHub) em 2013.
+Foco: **arquivo de configuração** legível e sem ambiguidades.
+
+```toml
+[curso]
+nome    = "Serialização de Dados"
+versao  = "1.0.0"
+ativo   = true
+
+[[alunos]]
+nome  = "Ana Lima"
+idade = 28
+nota  = 9.5
+
+[[alunos]]
+nome  = "Bruno Carvalho"
+idade = 34
+nota  = 8.0
+```
+
+---
+
+## TOML: tipos de dados
+
+```toml
+# String
+nome     = "Ana Lima"
+bio      = 'caminho: C:\Users\ana'   # string literal (sem escape)
+descricao = """
+Texto
+multilinha
+"""
+
+# Número
+inteiro  = 42
+float    = 9.5
+hex      = 0xDEADBEEF
+big      = 1_000_000   # underscore como separador visual
+
+# Data e hora (RFC 3339 nativo!)
+nascimento  = 1995-03-15
+reuniao     = 2025-01-20T14:30:00Z
+
+# Booleano
+aprovado = true
+```
+
+---
+
+## TOML: onde aparece
+
+| Ferramenta | Arquivo |
+|---|---|
+| Rust / Cargo | `Cargo.toml` |
+| Python | `pyproject.toml` |
+| Hugo (SSG) | `config.toml` |
+| pip | `pip.conf` |
+| Zola | `config.toml` |
+| Taplo (LSP) | Validação de TOML |
+| Gitoxide | `.gitoxide/config.toml` |
+
+---
+
+## TOML no R
+
+```r
+library(RcppTOML)
+
+# Ler TOML
+config <- parseTOML("dados/exemplo.toml")
+str(config)
+
+# Acessar campos
+config$curso$nome
+config$alunos[[1]]$nota
+
+# Não há write_toml nativo no RcppTOML
+# Alternativa: gerar com glue + escrever manualmente
+# ou usar o pacote 'toml' no Python via reticulate
+
+library(reticulate)
+toml <- import("toml")
+toml$dump(list(nome = "Ana", nota = 9.5))
+```
+
+---
+
+## TOML vs YAML: diferenças sutis
+
+| Aspecto | TOML | YAML |
+|---|---|---|
+| Foco | Configuração clara | Configuração + dados |
+| Hierarquia | `[secao.subsecao]` | indentação |
+| Arrays de tabelas | `[[nome]]` | `- item:` |
+| Tipos de data | ✅ nativo (RFC 3339) | ✅ parcial |
+| Comentários | ✅ `#` | ✅ `#` |
+| Ambiguidade | Muito baixa | Alta (booleanos, nulls) |
+| Superset de JSON | ❌ | ✅ |
+| Dados tabulares | Trabalhoso | Trabalhoso |
+| Config complexa | Razoável | Melhor |
+
+---
+
+## TOML: tropeços comuns ⚠️ {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+1. **Chave duplicada** na mesma seção → erro ou sobrescrita silenciosa
+2. **`[tabela]` após `[[array]]`** do mesmo nome → conflito
+3. **Data sem aspas no formato errado** → `1983-02-30` é inválido
+4. **Underscores no final de número** → `100_` = erro de sintaxe
+5. **Espaços em chaves sem aspas** → `minha chave = "x"` é inválido
+6. **Ordem importa para arrays de tabelas** — `[[t]]` deve vir antes de `[t.sub]`
+7. **String vs. string literal** — `'raw'` não processa `\n`
+:::
+::: {.column width="45%"}
+```toml
+# ERRO: chave duplicada
+[curso]
+nome = "A"
+nome = "B"   # ← erro
+
+# ERRO: conflict de tipo
+[alunos]
+nome = "Ana"
+
+[[alunos]]   # ← conflito!
+nome = "Bruno"
+
+# OK: sempre use aspas em datas-string
+nascimento = "1983-02-28"
+```
+:::
+::::
+
+---
+
+## Ferramentas Linux para TOML
+
+```bash
+# taplo: o melhor CLI para TOML
+taplo check dados/exemplo.toml       # validar
+taplo fmt dados/exemplo.toml         # formatar
+taplo get -f dados/exemplo.toml curso.nome  # consultar
+
+# Converter TOML → JSON com yq
+yq -p toml -o json dados/exemplo.toml
+
+# Python (embutido no pip)
+python3 -c "
+import tomllib, json, sys
+with open('dados/exemplo.toml','rb') as f:
+    d = tomllib.load(f)
+print(json.dumps(d, indent=2, ensure_ascii=False))
+"
+```
+
+---
+
+# Comparativo Geral {background-color="#1a1a2e"}
+
+---
+
+## Comparativo: quando usar cada formato? {.smaller}
+
+| Formato | Melhor para | Evitar quando |
+|---|---|---|
+| **FWF** | Legado / mainframe / CNAB | Novos projetos |
+| **CSV** | Tabelas, dados tabulares, ML | Dados hierárquicos |
+| **TSV** | Dados com vírgulas naturais | Excel (usa CSV) |
+| **YAML** | Config legível, CI/CD | Dados tabulares grandes |
+| **JSON** | APIs, web, NoSQL | Config humana |
+| **XML** | SOAP, NF-e, Office, HL7 | Config simples |
+| **TOML** | Config de ferramentas | Dados hierárquicos profundos |
+
+---
+
+## Comparativo: tamanho e verbosidade
+
+O mesmo dado em cada formato:
+
+```{r}
+#| eval: false
+# Um registro: nome="Ana Lima", idade=28, nota=9.5
+
+fwf  <- "Ana Lima            28 9.5 "         # 27 chars
+csv  <- "Ana Lima,28,9.5"                     # 15 chars
+tsv  <- "Ana Lima\t28\t9.5"                   # 17 chars
+json <- '{"nome":"Ana Lima","idade":28,"nota":9.5}' # 41 chars
+yaml <- "nome: Ana Lima\nidade: 28\nnota: 9.5"     # 37 chars
+toml <- 'nome="Ana Lima"\nidade=28\nnota=9.5'       # 36 chars
+xml  <- "<a><nome>Ana Lima</nome><idade>28</idade><nota>9.5</nota></a>" # 62 chars
+
+nchar(c(fwf=fwf, csv=csv, tsv=tsv, json=json, yaml=yaml, toml=toml, xml=xml))
+```
+
+> XML é ~4× mais verboso que CSV para dados tabulares simples.
+
+---
+
+## Comparativo: ecossistema R {.smaller}
+
+| Formato | Pacote principal | Alternativas |
+|---|---|---|
+| FWF | `readr::read_fwf()` | `iotools`, base `read.fwf()` |
+| CSV | `readr::read_csv()` | `data.table::fread()`, base `read.csv()` |
+| TSV | `readr::read_tsv()` | `data.table::fread(sep="\t")` |
+| YAML | `yaml::yaml.load_file()` | `ymlthis` (escrever YAML) |
+| JSON | `jsonlite::fromJSON()` | `rjson`, `jsonify`, `yyjsonr` |
+| XML | `xml2::read_xml()` | `XML` (legado), `xslt` |
+| TOML | `RcppTOML::parseTOML()` | `tomerl` (Erlang-inspired) |
+
+---
+
+## Comparativo: ferramentas Linux {.smaller}
+
+| Formato | Ferramenta | Instalação |
+|---|---|---|
+| CSV/TSV | `csvkit`, `mlr`, `xsv` | `pip install csvkit`, `brew/apt install miller` |
+| JSON | `jq`, `fx`, `gron` | `apt install jq` |
+| YAML | `yq` | `snap install yq` / `brew install yq` |
+| XML | `xmllint`, `xq` | `apt install libxml2-utils` |
+| TOML | `taplo` | `cargo install taplo-cli` |
+| Todos | `dasel` | `brew install dasel` |
+
+```bash
+# dasel: navega CSV, JSON, YAML, TOML, XML com a mesma sintaxe!
+dasel -f dados/exemplo.json '.alunos.[0].nome'
+dasel -f dados/exemplo.yaml '.alunos.[0].nome'
+dasel -f dados/exemplo.toml '.alunos.[0].nome'
+```
+
+---
+
+# Arquivos de Exemplo {background-color="#2c2c54"}
+
+---
+
+## Estrutura dos arquivos de exemplo
+
+```
+dados/
+├── exemplo.fwf    # Fixed-Width Format
+├── exemplo.csv    # Comma-Separated Values
+├── exemplo.tsv    # Tab-Separated Values
+├── exemplo.yaml   # YAML
+├── exemplo.json   # JSON
+├── exemplo.xml    # XML
+└── exemplo.toml   # TOML
+
+dados/erros/
+├── erro_fwf.fwf   # Erros comuns em FWF
+├── erro_csv.csv   # Erros comuns em CSV
+├── erro_yaml.yaml # Erros comuns em YAML
+├── erro_json.json # Erros comuns em JSON
+├── erro_xml.xml   # Erros comuns em XML
+└── erro_toml.toml # Erros comuns em TOML
+```
+
+Todos os arquivos usam o **mesmo dataset**: cadastro de 5 alunos com nome, idade, cidade e nota.
+
+---
+
+## Erros Comuns: FWF {.smaller}
+
+```{.text filename="dados/erros/erro_fwf.fwf"}
+# Layout: nome(20), idade(3), cidade(15), nota(5)
+
+# ERRO 1: linha truncada — cidade e nota ausentes
+Bruno Carvalho      34 Curitib
+
+# ERRO 2: overflow — cidade ultrapassa 15 chars, desloca nota
+Carla Dias          22 Belo Horizonte Sul  8.0
+
+# ERRO 3: encoding latin-1 em arquivo UTF-8 → "S?o Paulo"
+
+# ERRO 4: espaço dentro do campo numérico → parse como NA
+Daniel Souza        41 Porto Alegre    6. 0
+
+# ERRO 5: header reiniciando no meio dos dados (reprocessamento parcial)
+nome                   cidade         nota
+Elisa Fernandes     19 Recife         10.0
+```
+
+---
+
+## Erros Comuns: CSV {.smaller}
+
+```{.csv filename="dados/erros/erro_csv.csv"}
+# ERRO 1: vírgula dentro do campo sem aspas → colunas desalinhadas
+nome,idade,cidade,nota
+Ana Lima,28,São Paulo,9.5
+Carla Dias,22,Belo Horizonte,7.75  # cidade com vírgula quebraria sem aspas
+
+# ERRO 2: número diferente de colunas (falta a nota)
+Elisa Fernandes,19,Recife
+
+# ERRO 3: linha em branco inesperada
+
+# ERRO 4: encoding latin-1 em arquivo UTF-8 → S?o Paulo
+
+# ERRO 5: espaço extra no header → " nota" ≠ "nota"
+nome, idade, cidade, nota
+```
+
+---
+
+## Erros Comuns: JSON {.smaller}
+
+```{.json filename="dados/erros/erro_json.json"}
+{
+  "alunos": [
+    {
+      "nome": "Ana Lima",
+      "nota": 9.5,        ← ERRO 1: trailing comma
+    },
+    {
+      "nome": "Bruno"     ← ERRO 2: falta vírgula antes de "idade"
+      "idade": 34
+    },
+    {
+      "nome": 'Carla',   ← ERRO 3: aspas simples inválidas
+    },
+    {
+      "nota": NaN         ← ERRO 4: NaN não existe em JSON
+    }
+  ]
+}
+```
+
+---
+
+## Erros Comuns: YAML {.smaller}
+
+```{.yaml filename="dados/erros/erro_yaml.yaml"}
+alunos:
+  - nome: Ana Lima
+    idade: 28
+	  cidade: São Paulo   # ← ERRO 1: TAB na indentação
+
+  - nome:Bruno Carvalho  # ← ERRO 2: falta espaço após ":"
+    idade: 34
+
+  - nome: Carla: Dias    # ← ERRO 3: ":" em string sem aspas
+
+  - nome: Daniel Souza
+    aprovado: True        # ← ERRO 4: True com maiúscula = string em YAML 1.2
+
+  - nome: Elisa
+    dados: *perfil        # ← ERRO 5: âncora &perfil não definida
+```
+
+---
+
+## Erros Comuns: XML {.smaller}
+
+```{.xml filename="dados/erros/erro_xml.xml"}
+<?xml version="1.0" encoding="UTF-8"?>
+<cadastro>
+  <!-- ERRO 1: tag fechando com nome diferente -->
+  <aluno>
+    <nome>Ana Lima</Nome>
+  </aluno>
+
+  <!-- ERRO 2: atributo sem aspas -->
+  <aluno id=2>
+
+  <!-- ERRO 3: & sem escape -->
+  <nome>Carla & Dias</nome>
+
+  <!-- ERRO 4: tag não fechada -->
+  <aluno>
+    <nome>Daniel Souza</nome>
+    <idade>41</idade>
+    <!-- falta </aluno> -->
+
+  <!-- ERRO 5: < literal em conteúdo -->
+  <bio>nota < 5 = reprovado</bio>
+</cadastro>
+```
+
+---
+
+## Erros Comuns: TOML {.smaller}
+
+```{.toml filename="dados/erros/erro_toml.toml"}
+# ERRO 1: chave duplicada
+[curso]
+nome = "Serialização"
+nome = "Outro nome"      # ← duplicata → erro
+
+# ERRO 2: conflito [alunos] com [[alunos]]
+[alunos]
+nome = "Ana Lima"
+
+[[alunos]]               # ← conflito de tipo!
+nome = "Bruno Carvalho"
+
+# ERRO 3: data inválida sem aspas
+nascimento = 1983-02-30  # ← 30/fev não existe
+
+# ERRO 4: underscore no final de número
+cpf = 123_456_789_       # ← erro de sintaxe
+
+# ERRO 5: espaço em chave sem aspas
+minha chave = "valor"    # ← inválido
+```
+
+---
+
+# Recapitulando {background-color="#1a1a2e"}
+
+---
+
+## O que aprendemos hoje
+
+::: {.incremental}
+- **FWF**: herança do mainframe — posições fixas, atenção ao encoding e offsets
+- **CSV/TSV**: simples e universal — cuidado com vírgulas, encoding e decimais
+- **YAML**: legível e poderoso — tabs e booleanos são as principais armadilhas
+- **JSON**: o rei das APIs — sem comentários, sem trailing comma, sem NaN
+- **XML**: verboso mas robusto — escapes obrigatórios, namespaces complicam
+- **TOML**: config clara e sem ambiguidade — cuidado com conflitos de seção
+:::
+
+---
+
+## Serialização em uma frase
+
+> **Serializar** é traduzir estruturas de dados em memória para um formato que possa ser armazenado ou transmitido, preservando a estrutura para que possam ser **desserializadas** de volta com fidelidade.
+
+---
+
+## Próximos passos
+
+- Explore os arquivos em `dados/` e `dados/erros/`
+- Tente ler cada formato no R com os pacotes mostrados
+- Instale `jq`, `yq` e `mlr` para experimentar no terminal
+- Leitura recomendada:
+  - [RFC 4180 — CSV](https://www.rfc-editor.org/rfc/rfc4180)
+  - [YAML 1.2 Spec](https://yaml.org/spec/1.2.2/)
+  - [TOML Spec](https://toml.io/en/)
+  - [jq Manual](https://jqlang.github.io/jq/manual/)
+
+---
+
+## Obrigado! {background-color="#1a1a2e"}
+
+**R_Brasil |> bate::papo()**
+
+📁 Repositório: `mvf-each-usp/data-serial-formats`
+
+```r
+# Até a próxima!
+purrr::walk(formatos, aprender)
+```
+
+*Dúvidas? Abra uma issue ou comente no Discord!*

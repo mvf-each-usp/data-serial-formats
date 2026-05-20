@@ -1,0 +1,18 @@
+# ERRO 1: linha mais curta que o layout esperado (truncamento)
+# Layout: nome(20), idade(3), cidade(15), nota(5)
+Ana Lima            28 São Paulo      9.5
+Bruno Carvalho      34 Curitib            ← cidade truncada, nota ausente
+
+# ERRO 2: linha mais longa que o layout (overflow de campo)
+Carla Dias          22 Belo Horizonte Sul  8.0  ← cidade ultrapassou 15 chars
+
+# ERRO 3: encoding latin-1 / CP1252 declarado como UTF-8
+# "São Paulo" em latin-1 vira "S?o Paulo" ou "SÃ£o Paulo" em UTF-8
+
+# ERRO 4: campo numérico com espaço extra → parse como NA
+Daniel Souza        41 Porto Alegre    6. 0  ← espaço dentro da nota
+
+# ERRO 5: header embutido no meio dos dados (reprocessamento parcial)
+Ana Lima            28 São Paulo      9.5
+nome                   cidade         nota  ← header reinicia no meio
+Elisa Fernandes     19 Recife         10.0

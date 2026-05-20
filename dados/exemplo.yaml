@@ -1,0 +1,27 @@
+# Cadastro de alunos
+alunos:
+  - nome: Ana Lima
+    idade: 28
+    cidade: São Paulo
+    nota: 9.5
+    aprovado: true
+  - nome: Bruno Carvalho
+    idade: 34
+    cidade: Curitiba
+    nota: 8.0
+    aprovado: true
+  - nome: Carla Dias
+    idade: 22
+    cidade: Belo Horizonte
+    nota: 7.75
+    aprovado: true
+  - nome: Daniel Souza
+    idade: 41
+    cidade: Porto Alegre
+    nota: 6.0
+    aprovado: true
+  - nome: Elisa Fernandes
+    idade: 19
+    cidade: Recife
+    nota: 10.0
+    aprovado: true

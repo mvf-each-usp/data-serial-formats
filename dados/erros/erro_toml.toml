@@ -1,0 +1,28 @@
+# ERRO 1: chave duplicada na mesma seção (segundo valor silenciosamente sobrescreve)
+[curso]
+nome = "Serialização"
+nome = "Outro nome"      # ← duplicate key → erro em parsers estritos
+
+# ERRO 2: array de tabelas ([[alunos]]) misturado com tabela inline
+[alunos]
+nome = "Ana Lima"        # ← conflito: [alunos] e [[alunos]] não podem coexistir
+
+[[alunos]]
+nome = "Bruno Carvalho"
+idade = 34
+
+# ERRO 3: string multilinha com recuo mal posicionado (o """ deve estar sozinho na linha)
+[[alunos]]
+nome = "Carla Dias"
+bio = """Ama programar
+e café"""                # ← OK só se aspas de fechamento estiverem após conteúdo
+
+# ERRO 4: data sem o formato RFC 3339 correto
+[[alunos]]
+nome       = "Daniel Souza"
+nascimento = 1983-02-30  # ← sem aspas: TOML espera formato datetime; dia 30/fev inválido
+
+# ERRO 5: valor inteiro com underline mal posicionado
+[[alunos]]
+nome  = "Elisa Fernandes"
+cpf   = 123_456_789_     # ← underscore no final → erro de sintaxe

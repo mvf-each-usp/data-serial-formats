@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cadastro>
+  <aluno>
+    <nome>Ana Lima</nome>
+    <idade>28</idade>
+    <cidade>São Paulo</cidade>
+    <nota>9.5</nota>
+    <aprovado>true</aprovado>
+  </aluno>
+  <aluno>
+    <nome>Bruno Carvalho</nome>
+    <idade>34</idade>
+    <cidade>Curitiba</cidade>
+    <nota>8.0</nota>
+    <aprovado>true</aprovado>
+  </aluno>
+  <aluno>
+    <nome>Carla Dias</nome>
+    <idade>22</idade>
+    <cidade>Belo Horizonte</cidade>
+    <nota>7.75</nota>
+    <aprovado>true</aprovado>
+  </aluno>
+  <aluno>
+    <nome>Daniel Souza</nome>
+    <idade>41</idade>
+    <cidade>Porto Alegre</cidade>
+    <nota>6.0</nota>
+    <aprovado>true</aprovado>
+  </aluno>
+  <aluno>
+    <nome>Elisa Fernandes</nome>
+    <idade>19</idade>
+    <cidade>Recife</cidade>
+    <nota>10.0</nota>
+    <aprovado>true</aprovado>
+  </aluno>
+</cadastro>
