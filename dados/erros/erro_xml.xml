@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cadastro>
+
+  <!-- ERRO 1: tag de fechamento com nome diferente -->
+  <aluno>
+    <nome>Ana Lima</Nome>
+  </aluno>
+
+  <!-- ERRO 2: atributo sem aspas -->
+  <aluno id=2>
+    <nome>Bruno Carvalho</nome>
+  </aluno>
+
+  <!-- ERRO 3: caracter especial sem escape: & deve ser &amp; -->
+  <aluno>
+    <nome>Carla & Dias</nome>
+  </aluno>
+
+  <!-- ERRO 4: tag não fechada (falta </aluno>) -->
+  <aluno>
+    <nome>Daniel Souza</nome>
+    <idade>41</idade>
+
+  <!-- ERRO 5: uso de < literal dentro de conteúdo (deve ser &lt;) -->
+  <aluno>
+    <nome>Elisa Fernandes</nome>
+    <bio>nota < 5 significa reprovado</bio>
+  </aluno>
+
+</cadastro>

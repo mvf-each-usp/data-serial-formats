@@ -1,0 +1,29 @@
+{
+  "alunos": [
+    {
+      "nome": "Ana Lima",
+      "idade": 28,
+      "cidade": "São Paulo",
+      "nota": 9.5,
+      "aprovado": true,        ← ERRO 1: vírgula trailing (proibida em JSON)
+    },
+    {
+      "nome": "Bruno Carvalho"  ← ERRO 2: falta vírgula entre pares chave-valor
+      "idade": 34,
+      "cidade": "Curitiba"
+    },
+    {
+      "nome": 'Carla Dias',    ← ERRO 3: aspas simples não são válidas em JSON
+      "idade": 22
+    },
+    {
+      "nome": "Daniel Souza",
+      "nota": NaN              ← ERRO 4: NaN/Infinity não existem em JSON
+    },
+    {
+      "nome": "Elisa Fernandes",
+      "bio": "Linha 1\nLinha 2" ← OK, mas sem escape fica: "bio": "Linha 1
+Linha 2"   ← ERRO 5: quebra de linha literal dentro de string
+    }
+  ]
+}

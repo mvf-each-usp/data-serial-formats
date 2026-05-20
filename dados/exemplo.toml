@@ -1,0 +1,47 @@
+# Configuração do curso
+
+[curso]
+nome    = "Serialização de Dados"
+versao  = "1.0.0"
+idioma  = "pt-BR"
+ativo   = true
+
+[curso.alunos]
+total      = 5
+aprovados  = 5
+media_geral = 8.25
+
+[[alunos]]
+nome     = "Ana Lima"
+idade    = 28
+cidade   = "São Paulo"
+nota     = 9.5
+aprovado = true
+
+[[alunos]]
+nome     = "Bruno Carvalho"
+idade    = 34
+cidade   = "Curitiba"
+nota     = 8.0
+aprovado = true
+
+[[alunos]]
+nome     = "Carla Dias"
+idade    = 22
+cidade   = "Belo Horizonte"
+nota     = 7.75
+aprovado = true
+
+[[alunos]]
+nome     = "Daniel Souza"
+idade    = 41
+cidade   = "Porto Alegre"
+nota     = 6.0
+aprovado = true
+
+[[alunos]]
+nome     = "Elisa Fernandes"
+idade    = 19
+cidade   = "Recife"
+nota     = 10.0
+aprovado = true
