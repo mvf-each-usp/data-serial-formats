@@ -48,3 +48,8 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 .positai
+
+# output do pandoc e diretórios temporários
+*_files/
+*.html
+
