@@ -1,0 +1,594 @@
+---
+title: "Formatos text-based de serialização de dados"
+subtitle: "FWF, CSV/TSV, YAML, JSON, XML, TOML"
+author: "Marcelo Ventura Freire"
+format: 
+  revealjs:
+    theme: white
+    slide-number: true
+    navigation-mode: grid
+    slide-transition: slide
+    scrollable: true
+    smaller: true
+engine: knitr
+execute:
+  warning: false
+  error: false
+---
+
+# Estrutura sugerida
+
+## 1. Abertura
+
+* título
+* objetivo da apresentação
+* “por que isso importa?”
+
+Exemplo de framing:
+
+> Quase toda troca de dados entre programas, APIs, pipelines, bancos, containers e ferramentas de automação passa por algum formato textual estruturado.
+
+---
+
+# 2. Dados estruturados vs não estruturados
+
+Aqui vale usar contraste visual.
+
+## Texto livre
+
+```txt
+Marcelo nasceu em São Paulo em 1985 e trabalha com estatística.
+```
+
+## Estruturado
+
+```json
+{
+  "nome": "Marcelo",
+  "cidade": "São Paulo",
+  "ano_nascimento": 1985,
+  "profissao": "estatística"
+}
+```
+
+Pontos importantes:
+
+* texto livre:
+
+  * interpretação humana
+  * estrutura implícita
+  * ambiguidade
+
+* estruturado:
+
+  * estrutura explícita
+  * interpretação automática
+  * validação possível
+
+Também vale mostrar:
+
+| Tipo                | Exemplo     |
+| ------------------- | ----------- |
+| Semi-estruturado    | XML, JSON   |
+| Estruturado tabular | CSV         |
+| Não estruturado     | texto livre |
+
+---
+
+# 3. Serialização e desserialização
+
+Aqui você deve introduzir o conceito antes dos formatos.
+
+## Conceito
+
+* serialização:
+
+  * transformar estruturas de memória em representação textual/binária
+
+* desserialização:
+
+  * reconstruir estruturas a partir da representação
+
+## Exemplo em R
+
+```r
+x <- list(
+  nome = "Ana",
+  idade = 30
+)
+```
+
+Serializado em JSON:
+
+```json
+{
+  "nome": "Ana",
+  "idade": 30
+}
+```
+
+Desserializado:
+
+```r
+fromJSON(...)
+```
+
+Vale mencionar:
+
+* persistência
+* troca entre sistemas
+* APIs
+* configuração
+* interoperabilidade
+
+---
+
+# 4. Formatos tabulares simples
+
+## FWF
+
+Explique:
+
+* largura fixa
+* origem histórica
+* COBOL/mainframes
+* arquivos governamentais
+
+### Exemplo correto
+
+```txt
+ANA       031SP
+CARLOS    045RJ
+```
+
+### Problema comum
+
+```txt
+ANA    031SP
+CARLOS      045RJ
+```
+
+(alinhamento quebrado)
+
+## Ferramentas
+
+Linux:
+
+* `cut`
+* `awk`
+* `column`
+
+R:
+
+* [readr](https://readr.tidyverse.org?utm_source=chatgpt.com)
+* `read_fwf()`
+
+---
+
+## DSV
+
+Você pode separar em:
+
+* CSV
+* TSV
+* delimitadores arbitrários
+
+Explique:
+
+* delimitador
+* escaping
+* quoting
+
+### CSV correto
+
+```csv
+nome,idade,cidade
+Ana,30,São Paulo
+Carlos,45,Rio de Janeiro
+```
+
+### Problema clássico
+
+```csv
+nome,comentario
+Ana,Gosta de "R", Python e SQL
+```
+
+(quebrou quoting)
+
+### Outro tropeço
+
+```csv
+nome;idade;cidade
+Ana,30,São Paulo
+```
+
+(mistura de delimitadores)
+
+### Ferramentas
+
+Linux:
+
+* `csvkit`
+* `awk`
+* `mlr` (Miller)
+* `xsv`
+
+R:
+
+* [readr](https://readr.tidyverse.org?utm_source=chatgpt.com)
+* [data.table](https://rdatatable.gitlab.io/data.table/?utm_source=chatgpt.com)
+* `read_csv()`
+* `fread()`
+
+---
+
+# 5. YAML
+
+Importante explicar:
+
+* legibilidade humana
+* indentação semântica
+* muito usado em configuração
+
+Exemplos reais:
+
+* GitHub Actions
+* Docker Compose
+* Kubernetes
+* Quarto
+
+## Exemplo correto
+
+```yaml
+usuario:
+  nome: Ana
+  idade: 30
+```
+
+## Erro comum
+
+```yaml
+usuario:
+nome: Ana
+idade: 30
+```
+
+(indentações inválidas)
+
+## Outro tropeço
+
+```yaml
+ativo: yes
+```
+
+Dependendo do parser:
+
+```yaml
+yes -> TRUE
+```
+
+Isso é excelente para explicar coerção implícita.
+
+## Ferramentas
+
+Linux:
+
+* `yq`
+
+R:
+
+* [yaml](https://cran.r-project.org/package=yaml?utm_source=chatgpt.com)
+
+---
+
+# 6. JSON
+
+Explique:
+
+* estrutura hierárquica
+* ubiquidade em APIs
+* objetos e arrays
+
+## Exemplo
+
+```json
+{
+  "nome": "Ana",
+  "idade": 30,
+  "linguagens": ["R", "Python"]
+}
+```
+
+## Erros clássicos
+
+### vírgula final
+
+```json
+{
+  "nome": "Ana",
+}
+```
+
+### comentários
+
+```json
+{
+  // comentário
+  "nome": "Ana"
+}
+```
+
+(JSON não suporta comentários)
+
+### aspas simples
+
+```json
+{
+  'nome': 'Ana'
+}
+```
+
+## Ferramentas
+
+Linux:
+
+* `jq`
+
+R:
+
+* [jsonlite](https://jeroen.r-universe.dev/jsonlite?utm_source=chatgpt.com)
+
+---
+
+# 7. XML
+
+Aqui vale enfatizar:
+
+* verbosidade
+* schemas
+* namespaces
+* documentos e metadados
+
+Exemplos reais:
+
+* XHTML
+* SOAP
+* Office Open XML
+* RSS
+
+## Exemplo
+
+```xml
+<pessoa>
+  <nome>Ana</nome>
+  <idade>30</idade>
+</pessoa>
+```
+
+## Problemas comuns
+
+### tag não fechada
+
+```xml
+<pessoa>
+  <nome>Ana</nome>
+```
+
+### mismatch
+
+```xml
+<nome>Ana</idade>
+```
+
+### escaping
+
+```xml
+<texto>A < B</texto>
+```
+
+deveria ser:
+
+```xml
+<texto>A &lt; B</texto>
+```
+
+## Ferramentas
+
+Linux:
+
+* `xmllint`
+* `xmlstarlet`
+
+R:
+
+* [xml2](https://xml2.r-lib.org?utm_source=chatgpt.com)
+
+---
+
+# 8. TOML
+
+Explique:
+
+* configuração moderna
+* simplicidade
+* Rust/Cargo
+* pyproject.toml
+
+## Exemplo
+
+```toml
+[nome]
+usuario = "Ana"
+idade = 30
+```
+
+## Problemas comuns
+
+### redefinição
+
+```toml
+[a]
+x = 1
+
+[a]
+y = 2
+```
+
+### tipos inconsistentes
+
+```toml
+idade = "30"
+```
+
+quando se esperava inteiro.
+
+## Ferramentas
+
+Linux:
+
+* `tomlq`
+* `taplo`
+
+R:
+
+* [RcppTOML](https://cran.r-project.org/package=RcppTOML?utm_source=chatgpt.com)
+
+---
+
+# 9. Comparações entre formatos
+
+Essa seção é importante.
+
+Sugiro tabela comparativa.
+
+| Formato | Hierárquico | Humano | Comentários | Schema forte | Uso típico |
+| ------- | ----------- | ------ | ----------- | ------------ | ---------- |
+| CSV     | Não         | Médio  | Não         | Fraco        | tabelas    |
+| YAML    | Sim         | Alto   | Sim         | Fraco        | config     |
+| JSON    | Sim         | Médio  | Não         | Médio        | APIs       |
+| XML     | Sim         | Baixo  | Sim         | Forte        | documentos |
+| TOML    | Parcial     | Alto   | Sim         | Médio        | config     |
+
+---
+
+# 10. Armadilhas gerais
+
+Excelente slide final técnico.
+
+## Encoding
+
+* UTF-8
+* BOM
+* Latin-1
+
+## Quebras de linha
+
+* LF
+* CRLF
+
+## Locale
+
+* vírgula decimal
+* datas
+
+## Tipagem implícita
+
+* YAML
+* CSV
+
+## Escape e quoting
+
+* JSON
+* CSV
+* XML
+
+---
+
+# 11. Demonstração prática em R
+
+Um slide muito forte seria:
+
+```r
+library(jsonlite)
+
+x <- list(
+  nome = "Ana",
+  idade = 30
+)
+
+json <- toJSON(x, pretty = TRUE)
+
+y <- fromJSON(json)
+```
+
+E equivalentes para:
+
+* YAML
+* XML
+* CSV
+
+---
+
+# 12. Encerramento
+
+Mensagem central:
+
+> Formatos textuais estruturados são contratos de interoperabilidade entre sistemas.
+
+E:
+
+> A maior parte dos problemas reais não está no formato em si, mas em convenções, validação, encoding e interpretações incompatíveis.
+
+---
+
+# Sugestão importante para Reveal.js/Quarto
+
+Você pode aproveitar muito bem:
+
+* fragments
+* code line highlighting
+* colunas
+* callouts
+* incremental lists
+
+Exemplo:
+
+```markdown
+::: {.callout-warning}
+JSON não aceita comentários.
+:::
+```
+
+E:
+
+````markdown
+```json {.fragment}
+{
+  "nome": "Ana"
+}
+```
+
+````
+
+---
+
+# Sugestão adicional
+
+Vale MUITO incluir um slide:
+
+## “Quando NÃO usar formato textual”
+
+- volume gigantesco
+- performance
+- tipagem complexa
+- dados colunares
+
+e mencionar rapidamente:
+
+- Parquet
+- Arrow
+- Avro
+- Protocol Buffers
+
+como contraponto moderno.

@@ -1,0 +1,568 @@
+---
+title: "Formatos text-based de serialização de dados"
+subtitle: "FWF, CSV/TSV, YAML, JSON, XML, TOML"
+author: "Marcelo Ventura Freire"
+format: 
+  revealjs:
+    theme: white
+    slide-number: true
+    navigation-mode: grid
+    slide-transition: slide
+    scrollable: true
+    smaller: true
+engine: knitr
+execute:
+  warning: false
+  error: false
+---
+
+## Introdução
+
+Formatos text-based de serialização representam dados estruturados em texto legível por humanos, para armazenamento, troca entre sistemas e APIs.
+
+Exemplos de formatos:
+
+- **FWF**: largura de campo fixa.
+- **DSV**: CSV, TSV (separado por vírgula ou tab).
+- **YAML**, **JSON**, **XML**, **TOML**.
+
+Usos típicos:
+
+- **CSV/TSV**: planilhas, exportação de bancos de dados.
+- **JSON/YAML**: APIs, configurações.
+- **XML**: documentos complexos, RSS/Atom.
+- **TOML**: configurações de projetos (Rust, Python).
+- **FWF**: sistemas legados (mainframes, bancos).
+
+---
+
+## Dados estruturados vs. não estruturados
+
+**Estruturados**:
+
+- Esquema pré‑definido (colunas, tipos, hierarquia).  
+- Ex.: CSV, JSON, XML.
+
+**Não estruturados**:
+
+- Texto livre, logs, correspondências, PDFs.  
+- Ex.:
+```text
+  O paciente chegou às 14h com dor abdominal intensa.
+```
+
+**Semi-estruturados**:
+
+- Estrutura parcial (chaves, campos, mas variáveis entre registros).
+- Ex.: JSON aninhado, XML com campos opcionais.
+
+---
+
+## O que é serialização e desserialização?
+
+- **Serializar**: transformar objetos/estruturas em memória em um formato “plano” (ex.: JSON, XML, CSV).
+- **Desserializar**: recuperar esses objetos a partir do formato plano.
+
+Exemplo em R:
+
+```r
+library(jsonlite)
+
+# objeto em memória
+dados <- list(
+  pessoa = list(
+    nome = "Alice",
+    idade = 30
+  )
+)
+
+# serialização para JSON
+json_str <- toJSON(dados, auto_unbox = TRUE)
+cat(json_str, "\n")
+
+# desserialização
+lido <- fromJSON(json_str)
+str(lido)
+```
+
+
+---
+
+## Fixed‑Width Format (FWF)
+
+Campos de largura fixa, sem separadores visíveis.
+
+Arquivo exemplo (`pessoa.fwf`):
+
+```text
+001Alice   30
+002Bob     25
+```
+
+Leitura em R:
+
+```r
+# criar arquivo fictício
+writeLines(c(
+  "001Alice   30",
+  "002Bob     25"
+), con = "pessoa.fwf")
+
+# ler FWF: colunas de 3 (id), 7 (nome), 2 (idade)
+dados_fwf <- read.fwf(
+  "pessoa.fwf",
+  widths = c(3, 7, 2),
+  col.names = c("id", "nome", "idade")
+)
+
+dados_fwf
+```
+
+Escrita FWF (manual, pois não existe função padrão `write.fwf` simples):
+
+```r
+fmt <- function(id, nome, idade) {
+  sprintf("%03d%-7s%02d", id, nome, idade)
+}
+
+cat(
+  fmt(1, "Alice", 30),
+  fmt(2, "Bob",   25),
+  sep = "\n"
+)
+```
+
+
+---
+
+## DSV: CSV e TSV
+
+Formato separado por delimitador.
+
+`pessoa.csv`:
+
+```csv
+id,nome,idade,cidade
+1,Alice,30,"São Paulo"
+2,Bob,25,Rio
+```
+
+`pessoa.tsv`:
+
+```tsv
+id	nome	idade	cidade
+1	Alice	30	São Paulo
+2	Bob	    25	Rio
+```
+
+Leitura em R:
+
+```r
+# CSV (base)
+csv_basico <- read.csv("pessoa.csv", header = TRUE, stringsAsFactors = FALSE)
+
+# CSV/TSV moderno (readr)
+library(readr)
+
+csv_moderno <- read_csv("pessoa.csv")
+tsv_moderno <- read_tsv("pessoa.tsv")
+
+str(csv_moderno)
+str(tsv_moderno)
+```
+
+Escrita em R:
+
+```r
+pessoas <- data.frame(
+  id    = 1:2,
+  nome  = c("Alice", "Bob"),
+  idade = c(30, 25),
+  cidade = c("São Paulo", "Rio")
+)
+
+write_csv(pessoas, "saida_pessoa.csv")
+write_tsv(pessoas, "saida_pessoa.tsv")
+```
+
+
+---
+
+## YAML
+
+YAML foca em legibilidade humana, com indentação.
+
+Arquivo `pessoa.yaml`:
+
+```yaml
+pessoa:
+  nome: Alice
+  idade: 30
+  cidade: São Paulo
+```
+
+Leitura em R com `yaml`:
+
+```r
+# instalar se necessário
+# install.packages("yaml")
+
+library(yaml)
+
+# salvar YAML
+yaml_str <- yaml::as.yaml(
+  list(
+    pessoa = list(
+      nome   = "Alice",
+      idade  = 30,
+      cidade = "São Paulo"
+    )
+  )
+)
+
+cat(yaml_str)
+
+# ou para arquivo
+write_yaml(
+  list(
+    pessoa = list(
+      nome   = "Alice",
+      idade  = 30,
+      cidade = "São Paulo"
+    )
+  ),
+  file = "pessoa.yaml"
+)
+
+# ler YAML
+lido_yaml <- yaml::read_yaml("pessoa.yaml")
+str(lido_yaml)
+```
+
+
+---
+
+## JSON
+
+JSON é o padrão nas APIs web.
+
+Arquivo `pessoa.json`:
+
+```json
+{
+  "pessoa": {
+    "nome": "Alice",
+    "idade": 30,
+    "cidade": "São Paulo"
+  }
+}
+```
+
+Leitura/escrita em R com `jsonlite`:
+
+```r
+library(jsonlite)
+
+# objeto em memória
+obj <- list(
+  pessoa = list(
+    nome   = "Alice",
+    idade  = 30,
+    cidade = "São Paulo"
+  )
+)
+
+# serializar para string JSON
+json_str <- toJSON(obj, auto_unbox = TRUE, pretty = TRUE)
+cat(json_str)
+
+# serializar para arquivo
+write_json(obj, "pessoa.json")
+
+# desserializar
+lido_json <- read_json("pessoa.json")
+str(lido_json)
+```
+
+
+---
+
+## XML
+
+XML é mais verboroso, mas muito flexível.
+
+Arquivo `pessoa.xml`:
+
+```xml
+<pessoa>
+  <nome>Alice</nome>
+  <idade>30</idade>
+  <cidade>São Paulo</cidade>
+</pessoa>
+```
+
+Leitura em R com `xml2`:
+
+```r
+library(xml2)
+
+x <- read_xml("<pessoa>
+  <nome>Alice</nome>
+  <idade>30</idade>
+  <cidade>São Paulo</cidade>
+</pessoa>")
+
+# ou arquivo
+write_xml(x, "pessoa.xml")
+x2 <- read_xml("pessoa.xml")
+
+name <- xml_text(xml_find_first(x2, "./nome"))
+age  <- as.integer(xml_text(xml_find_first(x2, "./idade")))
+
+cat("Nome:", name, "\nIdade:", age, "\n")
+```
+
+
+---
+
+## TOML
+
+TOML é pensado para configurações.
+
+Arquivo `pessoa.toml`:
+
+```toml
+[pessoa]
+nome   = "Alice"
+idade  = 30
+cidade = "São Paulo"
+```
+
+Leitura em R com `toml`:
+
+```r
+# instalar: install.packages("toml")
+library(toml)
+
+# criar TOML inline
+toml_text <- '
+[pessoa]
+nome   = "Alice"
+idade  = 30
+cidade = "São Paulo"
+'
+
+# ler TOML
+lido_toml <- parse_toml(toml_text)
+str(lido_toml)
+
+# escrever para arquivo
+write_toml(lido_toml, "pessoa.toml")
+```
+
+
+---
+
+## Diferenças sutis entre formatos
+
+- **JSON vs YAML**:
+    - JSON é rígido, não aceita comentários, exige aspas.
+    - YAML é flexível e legível, mas depende de indentação correta.
+- **JSON vs TOML**:
+    - JSON: estruturas aninhadas com objetos e arrays.
+    - TOML: organiza por tabelas `[section]`, mais intuitivo para configurações simples.
+- **CSV vs FWF**:
+    - CSV: separadores e aspas quando necessário.
+    - FWF: campos por posição, sem separadores visíveis.
+- **XML vs JSON/YAML**:
+    - XML: muito verboso, mas com namespaces e extensibilidade.
+    - JSON/YAML: mais leves e fáceis de ler em logs.
+
+---
+
+## Tropeços e problemas comuns
+
+### FWF
+
+Arquivo com erro de largura (`pessoa_error_fwf.txt`):
+
+```text
+001 Alice 30
+002Bob     25
+```
+
+Leitura com largura errada:
+
+```r
+writeLines(c(
+  "001 Alice 30",
+  "002Bob     25"
+), "pessoa_error_fwf.txt")
+
+# leitura com largura errada -> bug
+dados_fwf_broken <- read.fwf(
+  "pessoa_error_fwf.txt",
+  widths = c(3, 7, 2),
+  col.names = c("id", "nome", "idade")
+)
+
+# veja que "Alice" vira "lice "
+dados_fwf_broken
+```
+
+
+### CSV
+
+Arquivo com erro de aspas (`pessoa_error_csv.csv`):
+
+```csv
+id,nome,idade,cidade
+1,Alice,30,"São Paulo, Boa Viagem",Brasil
+2,Bob,25,"São Paulo, "'"Brasil
+```
+
+Leitura com warning/erro:
+
+```r
+writeLines(c(
+  'id,nome,idade,cidade',
+  '1,Alice,30,"São Paulo, Boa Viagem",Brasil',
+  '2,Bob,25,"São Paulo, "'"Brasil',
+  sep = "\n"
+), "pessoa_error_csv.csv")
+
+# isto pode falhar ou gerar colunas extras
+tryCatch(
+  {
+    dados_csv_broken <- read_csv("pessoa_error_csv.csv")
+    str(dados_csv_broken)
+  },
+  error = function(e) {
+    cat("Erro de parser CSV:\n")
+    cat(e$message, "\n")
+  }
+)
+```
+
+
+### YAML
+
+Indentação inconsistente:
+
+```r
+# YAML com erro de indentação
+yaml_broken <- "
+pessoa:
+  nome: Alice
+ age: 30
+"
+
+# não vai ler
+tryCatch(
+  yaml::read_yaml(text = yaml_broken),
+  error = function(e) {
+    cat("Erro de YAML (indentação):\n")
+    cat(e$message, "\n")
+  }
+)
+```
+
+
+### JSON
+
+Sem aspas na chave:
+
+```r
+json_broken <- '
+{
+  name: "Alice",
+  age: 30
+}
+'
+
+# JSON deve ser com aspas
+tryCatch(
+  jsonlite::fromJSON(json_broken),
+  error = function(e) {
+    cat("Erro de JSON (sem aspas):\n")
+    cat(e$message, "\n")
+  }
+)
+```
+
+
+### XML
+
+Tag não fechada:
+
+```r
+xml_broken <- '<pessoa>
+  <nome>Alice</nome>
+  <idade>30
+</pessoa>'
+
+tryCatch(
+  xml2::read_xml(xml_broken),
+  error = function(e) {
+    cat("Erro de XML (tag não fechada):\n")
+    cat(e$message, "\n")
+  }
+)
+```
+
+
+### TOML
+
+Tabela duplicada:
+
+```r
+toml_broken <- '
+[pessoa]
+nome = "Alice"
+
+[pessoa]  # duplicada
+'
+
+tryCatch(
+  toml::parse_toml(toml_broken),
+  error = function(e) {
+    cat("Erro de TOML (tabela duplicada):\n")
+    cat(e$message, "\n")
+  }
+)
+```
+
+
+---
+
+## Bibliotecas em R para cada formato
+
+- **FWF**: `base::read.fwf()` (pacote `utils`).
+    - Alternativa para arquivos complexos: `multifwf::read.multi.fwf()`.
+- **CSV/TSV**:
+    - `base::read.csv()` / `read.csv2()` / `read.delim()`.
+    - `readr::read_csv()` / `read_tsv()` (mais rápido e moderno).
+- **YAML**: `yaml::read_yaml()` e `yaml::write_yaml()`.
+- **JSON**: `jsonlite::read_json()` / `write_json()`.
+- **XML**: `xml2` ou `XML`.
+- **TOML**: `toml::parse_toml()` / `write_toml()`.
+
+---
+
+## Ferramentas Linux por formato
+
+- **FWF**:
+    - `cut -c` para extrair por posição.
+    - `awk` para lógica mais complexa.
+- **CSV/TSV**:
+    - `awk`, `cut`, `sort`, `grep`.
+    - `csvkit` (Python) ou `xsv` (Rust) para manipulação avançada.
+- **JSON**:
+    - `jq` para consulta e extração.
+- **YAML**:
+    - `yq` (similar ao `jq` para YAML).
+- **XML**:
+    - `xmlstarlet` para manipulação em linha de comando.
+- **TOML**:
+    - `dasel` ou `tomlq` para consulta e escrita.
+

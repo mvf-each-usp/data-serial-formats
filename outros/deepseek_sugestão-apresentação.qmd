@@ -1,0 +1,364 @@
+---
+title: "Formatos text-based de serialização de dados"
+subtitle: "FWF, CSV/TSV, YAML, JSON, XML, TOML"
+author: "Marcelo Ventura Freire"
+format: 
+  revealjs:
+    theme: white
+    slide-number: true
+    navigation-mode: grid
+    slide-transition: slide
+    scrollable: true
+    smaller: true
+engine: knitr
+execute:
+  warning: false
+  error: false
+---
+
+# Formatos Text-Based de Serialização de Dados
+
+## Uma visão prática para análise e engenharia de dados
+
+---
+
+## 1. Introdução
+
+### Dados textuais estruturados x não estruturados
+
+- **Não estruturados**: texto livre, logs, artigos, conversas (ex: "João tem 30 anos e mora em SP")
+- **Estruturados**: seguem regras de organização explícitas
+
+### Exemplos breves de formatos estruturados
+
+- **FWF** (Fixed Width Fields): `Nome      Idade Cidade    `
+- **DSV** (CSV, TSV): `Nome,Idade,Cidade` → `João,30,SP`
+- **YAML**: `nome: João\nidade: 30`
+- **JSON**: `{"nome": "João", "idade": 30}`
+- **XML**: `<pessoa><nome>João</nome><idade>30</idade></pessoa>`
+- **TOML**: `nome = "João"\nidade = 30`
+
+### Onde aparecem no dia a dia
+
+- **FWF**: arquivos legados de sistemas bancários, recibos de cartão
+- **CSV/TSV**: Excel, Google Sheets, dados abertos governamentais
+- **YAML**: Docker Compose, Kubernetes, CI/CD (GitHub Actions)
+- **JSON**: APIs REST, NoSQL (MongoDB), logs estruturados
+- **XML**: DOCX, XLSX, SOAP, arquivos de nota fiscal
+- **TOML**: `Cargo.toml` (Rust), `pyproject.toml` (Python)
+
+---
+
+## 2. Serialização e Desserialização
+
+### Definição
+
+- **Serialização**: transformar estruturas de dados (listas, data.frames, dicionários) em texto (ou bytes) para armazenamento/transmissão
+- **Desserialização**: o processo inverso — reconstruir a estrutura a partir do texto
+
+### Por que serializar?
+
+- Salvar dados em arquivo
+- Enviar via rede/API
+- Compatibilidade entre linguagens
+
+---
+
+## 3. Os formatos em detalhe
+
+### FWF (Fixed Width File)
+
+```
+001João       30SP        
+002Maria      25RJ        
+```
+
+- Cada campo ocuma **número fixo de caracteres**
+- Rápido para leitura em baixo nível
+- **Problema comum**: espaços extras/truncamento
+
+---
+
+### DSV (Delimiter-Separated Values) - CSV/TSV
+
+```csv
+nome,idade,cidade
+João,30,São Paulo
+Maria,25,Rio de Janeiro
+```
+
+- Mais comum em análise de dados
+- **Tropeço**: vírgula dentro do campo, encoding, cabeçalho ausente
+
+---
+
+### JSON
+
+```json
+[
+  {"nome": "João", "idade": 30, "cidade": "São Paulo"},
+  {"nome": "Maria", "idade": 25, "cidade": "Rio de Janeiro"}
+]
+```
+
+- Universal para APIs
+- **Tropeço**: vírgula extra, falta de aspas em chaves, sem suporte a comentários
+
+---
+
+### YAML
+
+```yaml
+pessoas:
+  - nome: João
+    idade: 30
+    cidade: São Paulo
+  - nome: Maria
+    idade: 25
+    cidade: Rio de Janeiro
+```
+
+- Legível para humanos
+- **Tropeço**: problemas com indentação (misturar tabs/espaços)
+
+---
+
+### XML
+
+```xml
+<pessoas>
+  <pessoa>
+    <nome>João</nome>
+    <idade>30</idade>
+    <cidade>São Paulo</cidade>
+  </pessoa>
+  <pessoa>
+    <nome>Maria</nome>
+    <idade>25</idade>
+    <cidade>Rio de Janeiro</cidade>
+  </pessoa>
+</pessoas>
+```
+
+- Verboso, com hierarquia clara
+- **Tropeço**: tags não fechadas, falta de escapamento (`&`, `<`, `>`)
+
+---
+
+### TOML
+
+```toml
+[pessoas]
+  [pessoas.joao]
+  nome = "João"
+  idade = 30
+  cidade = "São Paulo"
+
+  [pessoas.maria]
+  nome = "Maria"
+  idade = 25
+  cidade = "Rio de Janeiro"
+```
+
+- Foco em arquivos de configuração
+- **Tropeço**: tipo errado (ex: string sem aspas para número)
+
+---
+
+## 4. Diferenças sutis entre formatos
+
+| Característica        | JSON | YAML | TOML | XML | CSV |
+|-----------------------|------|------|------|-----|-----|
+| Suporte a hierarquia  | Sim  | Sim  | Sim  | Sim | Não |
+| Tipos primitivos      | Sim  | Sim  | Sim  | Não¹ | Não |
+| Legível por humanos   | Médio | Alto | Alto | Baixo | Alto |
+| Tamanho típico        | Médio | Médio | Médio | Grande | Pequeno |
+| Comentários           | Não  | Sim   | Sim   | Não² | Não |
+
+¹ XML só strings, tipos vêm de schema/XSD  
+² Em XML comentários são possíveis mas não como metadados semânticos
+
+---
+
+## 5. Tropeços mais comuns (exemplos reais)
+
+### Codificação de texto
+
+- **CSV em Português**: usar UTF-8 ou Latin-1? Excel salva em ANSI por padrão
+- **BOM no JSON** – quebra parsers antigos
+
+### Delimitadores e escapes
+
+- CSV com `"30,25"` dentro de campo → quebra linha
+- JSON com `/` escapado desnecessariamente → `"http:\/\/site"`
+
+### Indentação e espaços
+
+- **YAML**: misturar TAB e espaço → erro obscuro
+- **FWF**: `"João    "` vs `"João "` – muda tudo
+
+### Vírgulas finais
+
+- JSON: `[1,2,3,]` → erro (Python permite, JS não)
+
+---
+
+## 6. Bibliotecas no R
+
+| Formato | Pacote principal                     | Exemplo de uso                             |
+|---------|--------------------------------------|---------------------------------------------|
+| CSV     | `readr::read_csv()` / `data.table::fread()` | `df <- read_csv("dados.csv")`             |
+| FWF     | `readr::read_fwf()`                  | `read_fwf("dados.txt", fwf_positions(...))` |
+| JSON    | `jsonlite::fromJSON()`               | `lista <- fromJSON("arquivo.json")`        |
+| YAML    | `yaml::yaml.load_file()`             | `config <- yaml.load_file("config.yml")`   |
+| XML     | `xml2::read_xml()` + `xml_find_all()`| `doc <- read_xml("dados.xml")`             |
+| TOML    | `RcppTOML::parseTOML()`              | `conf <- parseTOML("config.toml")`         |
+
+---
+
+## 7. Ferramentas Linux CLI
+
+| Formato | Comando/filtro                     | Exemplo                                    |
+|---------|------------------------------------|---------------------------------------------|
+| CSV     | `csvkit` (`csvcut`, `csvgrep`), `mlr` (Miller) | `csvcut -c nome,idade arquivo.csv`        |
+| FWF     | `awk` + substring                  | `awk '{print substr($0,1,10)}' dados.txt`  |
+| JSON    | `jq`                               | `jq '.[] | {nome, idade}' dados.json`      |
+| YAML    | `yq` (gojq-based)                  | `yq '.pessoas[].nome' dados.yaml`          |
+| XML     | `xmlstarlet`                       | `xmlstarlet sel -t -v "//nome" dados.xml`  |
+| TOML    | `tomlq` (do pacote `yj`)           | `tomlq '.pessoas.joao' config.toml`        |
+
+> Instalação: `sudo apt install jq csvkit xmlstarlet` + `pip install yq tomlq`
+
+---
+
+## 8. Arquivos pequenos para ilustrar (exemplos corretos)
+
+### FWF (`dados_fwf.txt`)
+```
+Nome      Idade Cidade    
+João      30    São Paulo 
+Maria     25    Rio de Janeiro
+```
+
+### CSV (`dados.csv`)
+```csv
+nome,idade,cidade
+João,30,São Paulo
+Maria,25,Rio de Janeiro
+```
+
+### JSON (`dados.json`)
+```json
+{
+  "pessoas": [
+    {"nome": "João", "idade": 30, "cidade": "São Paulo"},
+    {"nome": "Maria", "idade": 25, "cidade": "Rio de Janeiro"}
+  ]
+}
+```
+
+### YAML (`dados.yaml`)
+```yaml
+pessoas:
+  - nome: João
+    idade: 30
+    cidade: São Paulo
+  - nome: Maria
+    idade: 25
+    cidade: Rio de Janeiro
+```
+
+### XML (`dados.xml`)
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<pessoas>
+  <pessoa>
+    <nome>João</nome>
+    <idade>30</idade>
+    <cidade>São Paulo</cidade>
+  </pessoa>
+</pessoas>
+```
+
+### TOML (`dados.toml`)
+```toml
+[pessoas]
+  [pessoas.joao]
+  nome = "João"
+  idade = 30
+  cidade = "São Paulo"
+```
+
+---
+
+## 9. Arquivos com erros comuns (ilustração para diagnóstico)
+
+### CSV com erro (vírgula extra e campo sem aspas)
+```csv
+nome,idade,cidade
+"João, Filho",30,"São Paulo, SP"
+Maria,25,Rio de Janeiro,
+```
+
+**Problema**: vírgula dentro do campo nome, vírgula extra no fim.
+
+### JSON com erro (vírgula extra)
+```json
+{
+  "pessoas": [
+    {"nome": "João", "idade": 30},
+    {"nome": "Maria", "idade": 25},   // vírgula extra aqui
+  ]
+}
+```
+
+### YAML com erro de indentação
+```yaml
+pessoas:
+  - nome: João
+    idade: 30
+   cidade: São Paulo   # indentação errada (3 espaços vs 2)
+```
+
+### XML com erro (tag não fechada)
+```xml
+<pessoas>
+  <pessoa>
+    <nome>João</nome>
+    <idade>30
+  </pessoa>
+</pessoas>
+```
+
+### TOML com erro (tipo inferido errado)
+```toml
+joao_idade = 30          # certo
+joao_nome = João         # errado: string sem aspas
+maria_data = 2025-02-20  # TOML entende como date, ok, mas confunde iniciante
+```
+
+### FWF com erro (tamanho de campo incorreto)
+```
+Nome      Idade Cidade
+João      30  São Paulo   # Cidade invadiu espaço (FWF espera 12 colunas)
+```
+
+---
+
+## 10. Resumo e recomendações
+
+| Se você precisa...                      | Escolha                     |
+|-----------------------------------------|-----------------------------|
+| Interoperabilidade web/API              | JSON                        |
+| Configuração legível por humanos        | YAML ou TOML                |
+| Máxima performance em big data          | CSV/FWF (com streaming)     |
+| Documentos complexos com metadados      | XML (com schema)            |
+| Dados tabulares simples                 | CSV (com `readr`/`fread`)   |
+
+### Checklist de validação rápida
+
+1. **Encoding** sempre UTF-8, exceto legado explícito
+2. **Ferramentas CLI** (`jq`, `yq`, `csvlint`) salvam vidas
+3. **Olhe o arquivo** no hexdump se der erro (`xxd arquivo | head`)
+
+> Boa análise de dados começa com boa serialização – escolha o formato que equilibra legibilidade, ferramentas e robustez.
