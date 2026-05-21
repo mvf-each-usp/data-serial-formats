@@ -13,6 +13,7 @@ format:
     chalkboard: false
     scrollable: true
     transition: slide
+    smaller: true
     footer: "R_Brasil |> bate::papo() — Serialização de Dados"
     logo: ""
 execute:
